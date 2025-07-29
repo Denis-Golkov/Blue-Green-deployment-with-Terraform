@@ -9,7 +9,7 @@ provider "aws" {
     }
   }
 }
-#--------------------------------------------------------------
+#--------------Availability Zones------------------------
 data "aws_availability_zones" "working" {}
 data "aws_ami" "latest_amazon_linux" {
   owners      = ["137112412989"]
@@ -19,7 +19,7 @@ data "aws_ami" "latest_amazon_linux" {
     values = ["amzn2-ami-hvm-*-x86_64-gp2"]
   }
 }
-#-------------------------------------------------------------
+#-----------------Defaults----------------------------------
 resource "aws_default_vpc" "default" {}
 
 resource "aws_default_subnet" "default_az1" {
@@ -29,7 +29,7 @@ resource "aws_default_subnet" "default_az1" {
 resource "aws_default_subnet" "default_az2" {
   availability_zone = data.aws_availability_zones.working.names[1]
 }
-#-------------------------------------------------------------
+#--------------Security Group--------------------------------
 resource "aws_security_group" "web" {
   name   = "Web Security Group"
   vpc_id = aws_default_vpc.default.id
@@ -55,7 +55,7 @@ resource "aws_security_group" "web" {
 
 }
 
-#---------------------------------------------------------
+#--------------Launch Template-------------------------
 resource "aws_launch_template" "web" {
   name                   = "WebServer-HA-LT"
   image_id               = data.aws_ami.latest_amazon_linux.id
@@ -65,7 +65,7 @@ resource "aws_launch_template" "web" {
   user_data              = filebase64("${path.module}/user_data.sh")
 
 }
-#---------------------------------------------------------
+#--------------Auto Scaling Group (ASG)-----------------------------
 resource "aws_autoscaling_group" "web" {
   name                = "WbServer-HA-asg-ver-${aws_launch_template.web.latest_version}"
   min_size            = 2
@@ -97,7 +97,7 @@ resource "aws_autoscaling_group" "web" {
   }
 
 }
-#---------------------------------------------------------------------------------
+#----------------Application Load Balancer (ALB) -------------------------------------------
 resource "aws_lb" "web" {
   name               = "WebServer-HA-ALB"
   load_balancer_type = "application"

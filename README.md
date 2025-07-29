@@ -106,11 +106,25 @@ Before deploying this infrastructure, ensure you have:
 ### Sample user_data.sh
 ```bash
 #!/bin/bash
-yum update -y
-yum install -y httpd
-systemctl start httpd
-systemctl enable httpd
-echo "<h1>Web Server $(hostname -f)</h1>" > /var/www/html/index.html
+#!/bin/bash
+yum -y update
+yum -y install httpd
+
+myip=`curl http://169.254.169.254/latest/meta-data/local-ipv4`
+
+cat <<EOF > /var/www/html/index.html
+<html>
+<body bgcolor="grey">
+<h2><font color="gold">Build by Power of <font color="red">Terraform</font></h2><br><p>
+<font color="green">Server PrivateIP: <font color="aqua">$myip<br><br>
+<font color="yellow">
+<b>Version 3.0</b>
+</body>
+</html>
+EOF
+
+service httpd start
+chkconfig httpd on
 ```
 
 ## Deployment Commands
